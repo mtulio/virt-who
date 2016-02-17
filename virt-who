@@ -1,5 +1,36 @@
 #!/bin/sh
 
+# virt-who - Startup script of virt-who. See man(5) virt-who
+# This script is part of project https://github.com/virt-who/virt-who.
+
+PROG_NAME="$0"
+
+fail () {
+  echo -e "${PROG_NAME}: \e[0;31m[FAIL]\e[0m $1 " >&2
+  exit 1
+}
+
+# Check we're running as root.
+EFFUID=$(id -u) || fail "failed to get current user id"
+
+if [ "x$root" = "x" ] && [ "$EFFUID" -ne 0 ]; then
+    fail "this script must be run as root"
+fi
+
+# Check virt-who config files
+if [ $# -eq 0 ]; then
+  if [ ! -f /etc/virt-who.conf ] ||
+	[ ! -f /etc/sysconfig/virt-who ] ||
+	[ ! -d /etc/virt-who.d/ ]; then
+
+    CF_FILES="$(ls /etc/virt-who.d/*.conf)"
+    if [ "x$CF_FILES" = "x" ]; then
+      fail "no configuration found at [/etc/virt-who.conf, /etc/sysconfig/virt-who or /etc/virt-who.d/]"
+    fi
+  fi
+fi
+
+# Run virt-who
 if [ -f ./virtwho.py ];
 then
     # Run it from local directory when available
